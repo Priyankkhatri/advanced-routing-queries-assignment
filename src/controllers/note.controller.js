@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Note = require("../models/note.model");
 
+const allowedCategories = ["work", "personal", "study"];
+
 const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -255,6 +257,41 @@ const deleteBulkNotes = async (req, res) => {
   }
 };
 
+const getNotesByCategory = async (req, res) => {
+  try {
+    if (!allowedCategories.includes(req.params.category)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category. Allowed: work, personal, study",
+        data: null,
+      });
+    }
+
+    const notes = await Note.find({ category: req.params.category });
+
+    if (notes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No notes found for category: ${req.params.category}`,
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Notes fetched for category: ${req.params.category}`,
+      count: notes.length,
+      data: notes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   createNote,
   createBulkNotes,
@@ -264,4 +301,5 @@ module.exports = {
   updateNote,
   deleteNote,
   deleteBulkNotes,
+  getNotesByCategory,
 };
